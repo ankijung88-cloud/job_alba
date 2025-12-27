@@ -1,10 +1,14 @@
 import { useState } from "react";
+// 1. useNavigate를 react-router-dom에서 불러와야 합니다.
+import { useNavigate } from "react-router-dom";
 import { FiGlobe, FiChevronDown, FiBriefcase } from "react-icons/fi";
 
-const Navigation = () => {
+const CompanyNavigation = () => {
+  // 2. 컴포넌트 내부에서 navigate 함수를 선언해야 합니다.
+  const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
-  // 기업 서비스 관점의 실질적인 메뉴 데이터 (각 10개)
+  // 기업 서비스 관점의 실질적인 메뉴 데이터
   const menuData = [
     {
       name: "공고관리",
@@ -101,7 +105,10 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-[70px]">
           <div className="flex items-center gap-8">
-            <h1 className="text-2xl font-black text-blue-800 cursor-pointer tracking-tighter flex items-center gap-1">
+            <h1
+              onClick={() => navigate("/company")} // 클릭 시 기업 랜딩으로 이동 예시
+              className="text-2xl font-black text-blue-800 cursor-pointer tracking-tighter flex items-center gap-1"
+            >
               <FiBriefcase className="text-blue-600" /> JOB-ALBA{" "}
             </h1>
 
@@ -133,6 +140,13 @@ const Navigation = () => {
                       {menu.sub.map((item) => (
                         <li
                           key={item}
+                          onClick={() =>
+                            navigate(
+                              `/company/category/${encodeURIComponent(
+                                menu.name
+                              )}/${encodeURIComponent(item)}`
+                            )
+                          }
                           className="px-6 py-2.5 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-all flex items-center justify-between group"
                         >
                           {item}
@@ -160,6 +174,9 @@ const Navigation = () => {
                     {foreignRecruit.map((item) => (
                       <li
                         key={item.code}
+                        onClick={() =>
+                          navigate(`/company/foreign/${item.code}`)
+                        } // 예시 경로
                         className="px-6 py-2.5 hover:bg-teal-50 cursor-pointer flex flex-col transition-all border-l-4 border-transparent hover:border-teal-500"
                       >
                         <span className="text-teal-700 font-bold text-sm">
@@ -185,7 +202,10 @@ const Navigation = () => {
                 기업회원
               </span>
             </div>
-            <button className="bg-gray-800 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-gray-900 transition shadow-md">
+            <button
+              onClick={() => navigate("/company/post")} // 공고등록 페이지 이동
+              className="bg-gray-800 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-gray-900 transition shadow-md"
+            >
               공고등록
             </button>
           </div>
@@ -195,4 +215,4 @@ const Navigation = () => {
   );
 };
 
-export default Navigation;
+export default CompanyNavigation;

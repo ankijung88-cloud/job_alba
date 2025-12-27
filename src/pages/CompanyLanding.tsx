@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import Navigation from "./company/Navigation";
+import Navigation from "./company/CompanyNavigation";
 import HeroSection from "./company/HeroSection";
 import JobCard from "./company/JobCard";
 import TalentSearch from "./company/TalentSearch";
