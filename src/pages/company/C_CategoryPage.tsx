@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 // 1. 기업용 네비게이션을 가져옵니다. (파일명이 CompanyNavigation인지 확인하세요)
 import CompanyNavigation from "./CompanyNavigation";
 import {
-  FiArrowLeft,
+  FiArrowRight,
   FiPlus,
   FiSearch,
   FiFileText,
@@ -177,74 +177,92 @@ const C_CategoryPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      {/* 2. 기업용 네비게이션이 정확히 위치함 */}
-      <CompanyNavigation />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+      {/* (선택 사항) 페이지 상단 텍스트가 필요 없다면 삭제하셔도 됩니다. */}
+      <h1 className="text-4xl font-bold mb-4">기업 서비스 관리</h1>
+      <p className="text-gray-600 mb-6">해당 카테고리의 데이터를 관리합니다.</p>
 
-      <main className="max-w-7xl mx-auto px-6 py-10 w-full flex-grow">
-        <div className="flex items-center gap-2 text-xs text-gray-400 mb-6">
-          <span
-            className="cursor-pointer hover:text-gray-700"
-            onClick={() => navigate("/CompanyLanding")}
-          >
-            기업홈
-          </span>
-          <span>/</span>
-          <span>{decodedMenu}</span>
-          <span>/</span>
-          <span className={`${theme.textColor} font-bold`}>{decodedSub}</span>
-        </div>
+      {/* 2. 실제 웹사이트 프레임: w-screen을 통해 가로 배경을 꽉 채우되 내부를 다시 중앙 정렬합니다. */}
+      <div className="w-screen min-h-screen bg-gray-50 overflow-x-hidden flex flex-col items-center">
+        <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+          {/* 2. 기업용 네비게이션이 정확히 위치함 */}
+          <CompanyNavigation />
 
-        <div className="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm mb-8 relative overflow-hidden">
-          <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-5">
-              <div
-                className={`w-16 h-16 ${theme.bgColor} ${theme.textColor} rounded-2xl flex items-center justify-center text-3xl shadow-inner`}
+          <main className="max-w-7xl mx-auto px-6 py-10 w-full flex-grow">
+            <div className="flex items-center gap-2 text-xs text-gray-400 mb-6">
+              <span
+                className="cursor-pointer hover:text-gray-700"
+                onClick={() => navigate("/CompanyLanding")}
               >
-                {theme.icon}
-              </div>
-              <div>
-                <h1 className="text-2xl font-black text-gray-900 tracking-tight">
-                  {decodedSub}{" "}
-                  <span className="text-gray-400 font-light hidden sm:inline">
-                    | {decodedMenu}
-                  </span>
-                </h1>
-                <p className="text-gray-500 text-sm mt-1 font-medium">
-                  {theme.desc}
-                </p>
-              </div>
+                기업홈
+              </span>
+              <span>/</span>
+              <span>{decodedMenu}</span>
+              <span>/</span>
+              <span className={`${theme.textColor} font-bold`}>
+                {decodedSub}
+              </span>
             </div>
-            <div className="flex gap-3">
-              {decodedMenu === "공고관리" && (
-                <button
-                  onClick={() => navigate("/company/post")}
-                  className={`flex items-center gap-2 px-6 py-3 ${theme.accentColor} text-white rounded-xl font-bold hover:brightness-110 transition-all shadow-lg`}
-                >
-                  <FiPlus /> 새 공고 작성
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
 
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm min-h-[500px] overflow-hidden">
-          <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
-            <h3 className="font-bold text-gray-700">{decodedSub} 리스트</h3>
-            <div className="flex items-center gap-2 text-xs text-gray-400">
-              <FiEye /> 실시간 데이터 업데이트 중
+            <div className="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm mb-8 relative overflow-hidden">
+              <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
+                <div className="flex items-center gap-5">
+                  <div
+                    className={`w-16 h-16 ${theme.bgColor} ${theme.textColor} rounded-2xl flex items-center justify-center text-3xl shadow-inner`}
+                  >
+                    {theme.icon}
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-black text-gray-900 tracking-tight">
+                      {decodedSub}{" "}
+                      <span className="text-gray-400 font-light hidden sm:inline">
+                        | {decodedMenu}
+                      </span>
+                    </h1>
+                    <p className="text-gray-500 text-sm mt-1 font-medium">
+                      {theme.desc}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  {decodedMenu === "공고관리" && (
+                    <button
+                      onClick={() => navigate("/company/post")}
+                      className={`flex items-center gap-2 px-6 py-3 ${theme.accentColor} text-white rounded-xl font-bold hover:brightness-110 transition-all shadow-lg`}
+                    >
+                      <FiPlus /> 새 공고 작성
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-          {renderContent()}
-        </div>
 
-        <button
-          onClick={() => navigate(-1)}
-          className="mt-10 mx-auto flex items-center gap-2 text-gray-400 font-bold hover:text-gray-900 transition-all px-6 py-3 rounded-full hover:bg-white"
-        >
-          <FiArrowLeft /> 이전 페이지로
-        </button>
-      </main>
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm min-h-[500px] overflow-hidden">
+              <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
+                <h3 className="font-bold text-gray-700">{decodedSub} 리스트</h3>
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <FiEye /> 실시간 데이터 업데이트 중
+                </div>
+              </div>
+              {renderContent()}
+            </div>
+          </main>
+          <button
+            onClick={() => navigate("/Login")}
+            className="fixed bottom-24 right-8 w-14 h-14 bg-gray-900 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 group"
+          >
+            <span className="text-[10px] font-bold mb-1">LOGIN</span>
+            <FiArrowRight className="rotate-180 text-xl group-hover:-translate-x-1 transition-transform" />
+          </button>
+          <button
+            onClick={() => navigate(-1)}
+            className="fixed bottom-8 right-8 w-14 h-14 bg-gray-900 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 group"
+          >
+            <span className="text-[10px] font-bold mb-1">이전</span>
+            <FiArrowRight className="rotate-180 text-xl group-hover:-translate-x-1 transition-transform" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

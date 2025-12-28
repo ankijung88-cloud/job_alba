@@ -25,6 +25,14 @@ export default function App() {
         {/* ✅ 카테고리 상세 페이지: 누구나 볼 수 있도록 공용 섹션에 추가 */}
         {/* /category/채용정보/스타트업 처럼 파라미터를 통해 동적으로 렌더링합니다. */}
         <Route path="/category/:menuName/:subName" element={<CategoryPage />} />
+        <Route
+          path="/Login"
+          element={
+            <ProtectedRoute allowedRole="USER">
+              <Login />
+            </ProtectedRoute>
+          }
+        />
         {/* 기업 전용 */}
         <Route
           path="/CompanyLanding"

@@ -106,7 +106,7 @@ const CompanyNavigation = () => {
         <div className="flex items-center justify-between h-[70px]">
           <div className="flex items-center gap-8">
             <h1
-              onClick={() => navigate("/company")} // 클릭 시 기업 랜딩으로 이동 예시
+              onClick={() => navigate("/CompanyLanding")} // 클릭 시 기업 랜딩으로 이동 예시
               className="text-2xl font-black text-blue-800 cursor-pointer tracking-tighter flex items-center gap-1"
             >
               <FiBriefcase className="text-blue-600" /> JOB-ALBA{" "}

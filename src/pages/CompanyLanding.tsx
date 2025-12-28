@@ -87,12 +87,20 @@ export default function CompanyLanding() {
             © 2025 JOB-ALBA. All rights reserved.
           </footer>
         </div>
+        <button
+          onClick={() => navigate("/Login")}
+          className="fixed bottom-24 right-8 w-14 h-14 bg-gray-900 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 group"
+        >
+          <span className="text-[10px] font-bold mb-1">LOGIN</span>
+          <FiArrowRight className="rotate-180 text-xl group-hover:-translate-x-1 transition-transform" />
+        </button>
 
         {/* 플로팅 뒤로가기 버튼 */}
         <button
           onClick={() => navigate(-1)}
           className="fixed bottom-8 right-8 w-14 h-14 bg-gray-900 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 group"
         >
+          <span className="text-[10px] font-bold mb-1">이전</span>
           <FiArrowRight className="rotate-180 text-xl group-hover:-translate-x-1 transition-transform" />
         </button>
       </div>
