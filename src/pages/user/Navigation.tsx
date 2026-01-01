@@ -1,88 +1,13 @@
 import { useState } from "react";
 import { Link } from "react-router-dom"; // ✅ Link 컴포넌트 추가
 import { FiGlobe, FiChevronDown } from "react-icons/fi";
+import { CATEGORY_MENU } from "../../constants/menuData";
 
 const Navigation = () => {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
-  // 메뉴 데이터 (기존과 동일)
-  const menuData = [
-    {
-      name: "채용정보",
-      sub: [
-        "직종별 전체",
-        "산업별 전체",
-        "테마별 채용",
-        "브랜드 채용",
-        "대기업 채용",
-        "공공기관/공기업",
-        "외국계 기업",
-        "스타트업",
-        "중견기업 채용",
-        "신입/경력별",
-      ],
-    },
-    {
-      name: "지역별",
-      sub: [
-        "서울 전체",
-        "경기 전체",
-        "인천 전체",
-        "강원/충청",
-        "대전/세종",
-        "광주/전라",
-        "대구/경북",
-        "부산/경남",
-        "제도/강원",
-        "역세권별",
-      ],
-    },
-    {
-      name: "단기알바",
-      sub: [
-        "하루알바",
-        "주말알바",
-        "심야알바",
-        "새벽알바",
-        "오전/오후",
-        "행사보조",
-        "전시/컨벤션",
-        "물류/배송",
-        "카페/서빙",
-        "사무보조",
-      ],
-    },
-    {
-      name: "맞춤알바",
-      sub: [
-        "AI 추천 알바",
-        "내 주변 알바",
-        "관심 업종",
-        "성별 맞춤",
-        "연령대별",
-        "거주지 인근",
-        "전공/특기별",
-        "자격증 우대",
-        "병역특례",
-        "급구 알바",
-      ],
-    },
-    {
-      name: "고객지원",
-      sub: [
-        "공지사항",
-        "자주 묻는 질문",
-        "1:1 문의",
-        "이용가이드",
-        "이벤트 소식",
-        "제휴 제안",
-        "채용 공고 등록",
-        "권익보호센터",
-        "뉴스레터 신청",
-        "앱 다운로드",
-      ],
-    },
-  ];
+  // 메뉴 데이터 (기존과 동일하지만 shared constant 사용)
+  const menuData = CATEGORY_MENU.slice(0, 4); // 외국인 채용 제외하고 상위 4개만 메인 메뉴로 사용 (필요 시 조정)
 
   const visaTypes = [
     { code: "E-9", name: "비전문취업" },
@@ -118,17 +43,15 @@ const Navigation = () => {
                   onMouseLeave={() => setOpenMenu(null)}
                 >
                   <div
-                    className={`flex items-center gap-1 cursor-pointer text-sm lg:text-base transition-colors ${
-                      openMenu === menu.name
-                        ? "text-blue-600"
-                        : "hover:text-blue-600"
-                    }`}
+                    className={`flex items-center gap-1 cursor-pointer text-sm lg:text-base transition-colors ${openMenu === menu.name
+                      ? "text-blue-600"
+                      : "hover:text-blue-600"
+                      }`}
                   >
                     {menu.name}
                     <FiChevronDown
-                      className={`transition-transform duration-200 ${
-                        openMenu === menu.name ? "rotate-180" : ""
-                      }`}
+                      className={`transition-transform duration-200 ${openMenu === menu.name ? "rotate-180" : ""
+                        }`}
                     />
                   </div>
 
@@ -189,19 +112,37 @@ const Navigation = () => {
             </ul>
           </div>
 
-          {/* 우측 로그인/가입 영역 (기존 유지) */}
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:flex bg-gray-100 p-1 rounded-lg gap-2">
-              <button className="px-3 py-1.5 text-xs font-bold text-gray-600 bg-white shadow-sm hover:shadow-md transition-all rounded-md">
-                구직자 로그인
-              </button>
-              <button className="px-3 py-1.5 text-xs font-bold text-gray-600 bg-white shadow-sm hover:shadow-md transition-all rounded-md">
-                기업 로그인
-              </button>
+          {/* 우측 사용자 정보 및 프로필 수정 버튼 */}
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col items-end mr-2">
+              {/* localStorage에서 userProfile 읽어와서 표시 (실제로는 useEffect로 상태 관리 권장되지만, 여기선 간소화) */}
+              {(() => {
+                try {
+                  const profileStr = localStorage.getItem("userProfile");
+                  const profile = profileStr ? JSON.parse(profileStr) : null;
+                  return profile ? (
+                    <>
+                      <span className="text-xs text-gray-400 font-medium">
+                        {profile.name}님
+                      </span>
+                      <span className="text-[10px] bg-blue-50 text-blue-600 px-1 rounded font-bold border border-blue-100">
+                        개인회원
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-xs text-gray-400">게스트 모드</span>
+                  );
+                } catch (e) {
+                  return <span className="text-xs text-gray-400">오류</span>;
+                }
+              })()}
             </div>
-            <button className="bg-blue-600 text-white px-4 py-1.5 rounded-md text-xs font-bold hover:bg-blue-700 transition">
-              회원가입
-            </button>
+            <Link
+              to="/user/profile"
+              className="bg-gray-800 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-black transition shadow-md"
+            >
+              프로필 수정
+            </Link>
           </div>
         </div>
       </div>

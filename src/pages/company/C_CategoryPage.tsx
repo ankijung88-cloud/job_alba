@@ -2,6 +2,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 // 1. 기업용 네비게이션을 가져옵니다. (파일명이 CompanyNavigation인지 확인하세요)
 import CompanyNavigation from "./CompanyNavigation";
+import LaborContractBoard from "./LaborContractBoard";
+import MinimumWageCalculator from "./MinimumWageCalculator";
+import SubsidyBoard from "./SubsidyBoard";
+import InsuranceGuideBoard from "./InsuranceGuideBoard";
+import TalentSearchBoard from "./TalentSearchBoard";
 import {
   FiArrowRight,
   FiPlus,
@@ -25,6 +30,37 @@ const C_CategoryPage = () => {
 
   const decodedMenu = decodeURIComponent(menuName || "");
   const decodedSub = decodeURIComponent(subName || "");
+
+  // "공고관리" 메뉴의 특정 서브메뉴일 경우 대시보드 컴포넌트(혹은 리스트)를 보여주기 위한 로직
+  // 여기서는 간단히 리다이렉트하거나 조건부 렌더링을 할 수 있습니다. 
+  // 사용자가 "채용공고 등록", "진행중인 공고", "마감된 공고" 등을 클릭했을 때 Dashboard로 보내되, 
+  // 탭 상태를 같이 전달하면 좋겠지만, 현재 Dashboard는 내부 state로 탭을 관리함.
+  // 따라서, 여기서는 Dashboard를 직접 렌더링하거나 Navigate로 이동시킵니다.
+  // 사용자 요구: "채용공고 등록리스트"와 "진행중인 공고 리스트"에도 등록된 공고가 업데이트되어 보여지도록.
+  // 즉, 이 페이지에서 해당 리스트를 보여주거나, Dashboard를 재활용해야 함.
+
+  // 만약 "채용공고 등록"이 "새 글 쓰기"가 아니라 "등록한 글 리스트"를 의미한다면 Dashboard 연결이 맞음.
+  // 하지만 "채용공고 등록" 텍스트 자체는 보통 Action을 의미함. 
+  // 네비게이션 구조상 "공고관리" -> "채용공고 등록" 이라는 메뉴가 있다면, 
+  // 1. 새 글 쓰기 폼으로 이동? OR 2. 등록 내역 리스트?
+  // 사용자 요청: "채용공고 등록리스트... 에도 등록된 공고가 업데이트되어... 보여지도록" 
+  // -> 리스트 조회 페이지로 해석됨.
+
+  useEffect(() => {
+    if (decodedMenu === "공고관리") {
+      if (decodedSub === "채용공고 등록" || decodedSub === "진행중인 공고") {
+        // 대시보드로 이동 (쿼리 파라미터로 탭 전달 가능하면 좋음, 지금은 그냥 이동)
+        navigate('/company/Dashboard');
+        return;
+      }
+      if (decodedSub === "마감된 공고") {
+        // 마감된 공고 탭을 보여주고 싶지만, Dashboard 구현상 state로만 관리됨.
+        // 일단 Dashboard로 이동. 개선시 Dashboard가 URL query param을 읽도록 수정 필요.
+        navigate('/company/Dashboard');
+        return;
+      }
+    }
+  }, [decodedMenu, decodedSub, navigate]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -61,6 +97,15 @@ const C_CategoryPage = () => {
           accentColor: "bg-indigo-600",
           desc: "우리 공고에 지원한 인재들의 채용 프로세스를 관리합니다.",
         };
+      case "기업지원":
+        return {
+          icon: <FiSettings />,
+          color: "gray",
+          bgColor: "bg-gray-50",
+          textColor: "text-gray-600",
+          accentColor: "bg-gray-800",
+          desc: "기업 운영에 필요한 각종 서비스를 제공합니다.",
+        };
       default:
         return {
           icon: <FiSettings />,
@@ -76,6 +121,22 @@ const C_CategoryPage = () => {
   const theme = getMenuTheme();
 
   const renderContent = () => {
+    if (decodedMenu === "기업지원" && decodedSub === "근로계약서 양식") {
+      return <LaborContractBoard />;
+    }
+
+    if (decodedMenu === "기업지원" && decodedSub === "최저임금 계산기") {
+      return <MinimumWageCalculator />;
+    }
+
+    if (decodedMenu === "기업지원" && decodedSub === "4대보험 안내") {
+      return <InsuranceGuideBoard />;
+    }
+
+    if (decodedMenu === "기업지원" && decodedSub === "정부지원금 안내") {
+      return <SubsidyBoard />;
+    }
+
     if (isLoading) {
       return (
         <div className="p-12 grid grid-cols-1 gap-4">
@@ -142,33 +203,35 @@ const C_CategoryPage = () => {
       );
     }
 
+    if (decodedMenu === "인재검색") {
+      return <TalentSearchBoard subName={decodedSub} />;
+    }
+
+    /* if (decodedMenu === "지원자관리") {
+      return <ApplicantManager />;
+    } */
+
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8">
+        {/* Fallback internal generic view */}
         {[1, 2, 3, 4].map((i) => (
+          // ... existing fallback code if needed, but "인재검색" covers most cases.
+          // Actually, since "인재검색" uses TalentSearchBoard, this part might only be reached by other categories like "지원자관리".
+          // Let's keep the fallback for other categories for now.
           <div
             key={i}
             className="border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition-all bg-white group"
           >
+            {/* ... keeping simplified fallback content ... */}
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 font-bold">
                   P{i}
                 </div>
                 <div>
-                  <h4 className="font-bold text-gray-900">익명 지원자 {i}</h4>
-                  <p className="text-xs text-gray-400">
-                    경력 3년 · 서울 강남구
-                  </p>
+                  <h4 className="font-bold text-gray-900">익명 지원자 {i} (기타)</h4>
                 </div>
               </div>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-4">
-              <span className="text-[10px] px-2 py-1 bg-gray-50 text-gray-500 rounded">
-                #Python
-              </span>
-              <span className="text-[10px] px-2 py-1 bg-gray-50 text-gray-500 rounded">
-                #React
-              </span>
             </div>
           </div>
         ))}
@@ -247,20 +310,7 @@ const C_CategoryPage = () => {
               {renderContent()}
             </div>
           </main>
-          <button
-            onClick={() => navigate("/Login")}
-            className="fixed bottom-24 right-8 w-14 h-14 bg-gray-900 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 group"
-          >
-            <span className="text-[10px] font-bold mb-1">LOGIN</span>
-            <FiArrowRight className="rotate-180 text-xl group-hover:-translate-x-1 transition-transform" />
-          </button>
-          <button
-            onClick={() => navigate(-1)}
-            className="fixed bottom-8 right-8 w-14 h-14 bg-gray-900 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 group"
-          >
-            <span className="text-[10px] font-bold mb-1">이전</span>
-            <FiArrowRight className="rotate-180 text-xl group-hover:-translate-x-1 transition-transform" />
-          </button>
+
         </div>
       </div>
     </div>

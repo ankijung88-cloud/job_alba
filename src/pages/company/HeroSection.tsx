@@ -3,10 +3,12 @@ import { FiSearch } from "react-icons/fi";
 // 1. Props의 타입을 정의합니다.
 interface HeroSectionProps {
   onSearchClick: () => void;
+  searchQuery?: string;
+  setSearchQuery?: (query: string) => void;
 }
 
 // 2. 정의한 타입을 컴포넌트에 적용하고 구조 분해 할당으로 가져옵니다.
-const HeroSection = ({ onSearchClick }: HeroSectionProps) => {
+const HeroSection = ({ onSearchClick, searchQuery, setSearchQuery }: HeroSectionProps) => {
   return (
     <div className="bg-slate-100 py-16 px-6 rounded-2xl">
       <div className="max-w-4xl mx-auto text-center">
@@ -19,8 +21,11 @@ const HeroSection = ({ onSearchClick }: HeroSectionProps) => {
           <FiSearch className="ml-4 text-gray-400 text-xl" />
           <input
             type="text"
-            placeholder="필요한 직무나 기술 스택을 입력하세요"
+            placeholder="이름, 한줄 소개, 전화번호로 인재를 검색해보세요"
             className="w-full p-4 outline-none text-lg text-gray-700"
+            value={searchQuery || ""}
+            onChange={(e) => setSearchQuery && setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && onSearchClick()}
           />
           {/* 3. 전달받은 함수를 버튼에 연결합니다. */}
           <button

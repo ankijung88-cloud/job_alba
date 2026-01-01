@@ -1,12 +1,25 @@
-import { useState } from "react";
-// 1. useNavigate를 react-router-dom에서 불러와야 합니다.
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiGlobe, FiChevronDown, FiBriefcase } from "react-icons/fi";
 
 const CompanyNavigation = () => {
-  // 2. 컴포넌트 내부에서 navigate 함수를 선언해야 합니다.
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState("테크컴퍼니");
+
+  useEffect(() => {
+    const companyProfileStr = localStorage.getItem("companyProfile");
+    if (companyProfileStr) {
+      try {
+        const companyProfile = JSON.parse(companyProfileStr);
+        if (companyProfile.companyName) {
+          setCompanyName(companyProfile.companyName);
+        }
+      } catch (e) {
+        console.error("Failed to parse company profile", e);
+      }
+    }
+  }, []);
 
   // 기업 서비스 관점의 실질적인 메뉴 데이터
   const menuData = [
@@ -14,15 +27,9 @@ const CompanyNavigation = () => {
       name: "공고관리",
       sub: [
         "채용공고 등록",
-        "진행중인 공고",
-        "마감된 공고",
         "임시저장 공고",
-        "공고 복사 등록",
         "공고 템플릿 관리",
         "지원 양식 설정",
-        "스크랩한 인재",
-        "공고 통계 분석",
-        "자동 마감 설정",
       ],
     },
     {
@@ -40,7 +47,7 @@ const CompanyNavigation = () => {
         "최근 본 인재",
       ],
     },
-    {
+    /* {
       name: "지원자관리",
       sub: [
         "미열람 지원자",
@@ -54,7 +61,7 @@ const CompanyNavigation = () => {
         "채용 확정 보고",
         "지원자 DB 백업",
       ],
-    },
+    }, */
     {
       name: "유료서비스",
       sub: [
@@ -73,16 +80,10 @@ const CompanyNavigation = () => {
     {
       name: "기업지원",
       sub: [
-        "인사노무 상담",
         "근로계약서 양식",
         "최저임금 계산기",
         "4대보험 안내",
         "정부지원금 안내",
-        "기업 정보 수정",
-        "계정 보안 설정",
-        "권한 관리(멤버)",
-        "고객센터 문의",
-        "서비스 개선 제안",
       ],
     },
   ];
@@ -106,7 +107,7 @@ const CompanyNavigation = () => {
         <div className="flex items-center justify-between h-[70px]">
           <div className="flex items-center gap-8">
             <h1
-              onClick={() => navigate("/CompanyLanding")} // 클릭 시 기업 랜딩으로 이동 예시
+              onClick={() => navigate("/CompanyLanding")}
               className="text-2xl font-black text-blue-800 cursor-pointer tracking-tighter flex items-center gap-1"
             >
               <FiBriefcase className="text-blue-600" /> JOB-ALBA{" "}
@@ -121,17 +122,15 @@ const CompanyNavigation = () => {
                   onMouseLeave={() => setOpenMenu(null)}
                 >
                   <div
-                    className={`flex items-center gap-1 cursor-pointer text-base transition-colors ${
-                      openMenu === menu.name
-                        ? "text-blue-600"
-                        : "hover:text-blue-600"
-                    }`}
+                    className={`flex items-center gap-1 cursor-pointer text-base transition-colors ${openMenu === menu.name
+                      ? "text-blue-600"
+                      : "hover:text-blue-600"
+                      }`}
                   >
                     {menu.name}{" "}
                     <FiChevronDown
-                      className={`transition-transform duration-200 ${
-                        openMenu === menu.name ? "rotate-180" : ""
-                      }`}
+                      className={`transition-transform duration-200 ${openMenu === menu.name ? "rotate-180" : ""
+                        }`}
                     />
                   </div>
 
@@ -176,7 +175,7 @@ const CompanyNavigation = () => {
                         key={item.code}
                         onClick={() =>
                           navigate(`/company/foreign/${item.code}`)
-                        } // 예시 경로
+                        }
                         className="px-6 py-2.5 hover:bg-teal-50 cursor-pointer flex flex-col transition-all border-l-4 border-transparent hover:border-teal-500"
                       >
                         <span className="text-teal-700 font-bold text-sm">
@@ -194,16 +193,39 @@ const CompanyNavigation = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex flex-col items-end mr-2">
-              <span className="text-xs text-gray-400 font-medium">
-                테크컴퍼니님
-              </span>
-              <span className="text-[10px] bg-gray-100 px-1 rounded text-gray-600 font-bold">
-                기업회원
-              </span>
+            <div className="flex flex-col items-end mr-2 group relative">
+              <div className="flex flex-col items-end cursor-pointer">
+                <span className="text-xs text-gray-400 font-medium">
+                  {companyName}님
+                </span>
+                <span className="text-[10px] bg-gray-100 px-1 rounded text-gray-600 font-bold">
+                  기업회원
+                </span>
+              </div>
+
+              {/* Dropdown for Profile */}
+              <div className="absolute top-full right-0 pt-2 hidden group-hover:block z-50">
+                <div className="bg-white border border-gray-200 rounded-lg shadow-xl py-2 w-32">
+                  <button
+                    onClick={() => navigate("/company/edit")}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 font-bold"
+                  >
+                    정보 수정
+                  </button>
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem("role");
+                      navigate("/login");
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 font-bold"
+                  >
+                    로그아웃
+                  </button>
+                </div>
+              </div>
             </div>
             <button
-              onClick={() => navigate("/company/post")} // 공고등록 페이지 이동
+              onClick={() => navigate("/company/post")}
               className="bg-gray-800 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-gray-900 transition shadow-md"
             >
               공고등록

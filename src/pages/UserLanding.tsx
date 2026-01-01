@@ -1,61 +1,131 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "./user/Navigation";
 import HeroSection from "./user/HeroSection";
 import JobCard from "./user/JobCard";
 import CompanySearch from "./user/CompanySearch";
-import { FiTrendingUp, FiGift, FiMap, FiArrowRight } from "react-icons/fi";
+import type { JobData } from "./user/CompanySearch"; // Type-only import
+import { FiTrendingUp, FiGift, FiMap, FiArrowRight, FiSearch, FiLogIn, FiX } from "react-icons/fi";
 
 export default function UserLanding() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("전체");
+  // 퀵 필터 버튼 목록 (UserLanding에 정의)
+  const filterButtons = [
+    { label: "전체", value: "전체" },
+    { label: "💰 고수익", value: "고수익" },
+    { label: "🏠 숙소제공", value: "숙소" },
+    { label: "🛠 기술직", value: "기술" },
+    { label: "⏰ 시간협의", value: "시간협의" },
+  ];
+  const [allJobs, setAllJobs] = useState<JobData[]>([]); // 전체 공고 리스트
+  const [filteredRecommendedJobs, setFilteredRecommendedJobs] = useState<JobData[]>([]); // 필터링된 "추천" 공고
+
   const searchSectionRef = useRef<HTMLDivElement>(null);
 
-  const handleSearchAction = (filterValue: string) => {
-    setActiveFilter(filterValue);
-    setTimeout(() => {
-      searchSectionRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
+  // 1. 초기 데이터 로드 (localStorage -> db_jobs)
+  useEffect(() => {
+    const jobsStr = localStorage.getItem("db_jobs");
+    if (jobsStr) {
+      try {
+        const jobs: JobData[] = JSON.parse(jobsStr);
+        // 최신순 정렬 (ID가 timestamp 기반이므로 역순 정렬하면 최신순)
+        // 만약 postedAt이 있다면 그걸 기준해도 됨
+        setAllJobs(jobs.reverse());
+      } catch (e) {
+        console.error("Failed to parse jobs", e);
+      }
+    }
+  }, []);
+
+  // 2. 검색어(searchQuery) 및 퀵필터(activeFilter) 변경 시 'Recommended for You' 섹션 필터링
+  useEffect(() => {
+    if (allJobs.length === 0) return;
+
+    let results = allJobs;
+
+    // 2-1. 검색어 필터
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      results = results.filter(job =>
+        job.title.toLowerCase().includes(query) ||
+        job.company.toLowerCase().includes(query) ||
+        job.location.toLowerCase().includes(query) ||
+        (job.tags && job.tags.some(tag => tag.toLowerCase().includes(query)))
+      );
+    }
+
+    // 2-2. 퀵 필터 적용 (추가)
+    if (activeFilter !== "전체") {
+      results = results.filter(job =>
+        (job.tags && job.tags.some(t => t.includes(activeFilter))) ||
+        (job.title.includes(activeFilter)) ||
+        (job.benefits && job.benefits.includes(activeFilter))
+      );
+    }
+
+    setFilteredRecommendedJobs(results.slice(0, 8)); // 필터 적용 후 최대 8개 표시
+  }, [searchQuery, activeFilter, allJobs]);
+
+
+  const [showRisingModal, setShowRisingModal] = useState(false);
+  const [risingJobs, setRisingJobs] = useState<JobData[]>([]);
+
+  // 3. 급상승 공고 더미 데이터 초기화 (User Testing용)
+  useEffect(() => {
+    const statsStr = localStorage.getItem("db_job_applies");
+    if (!statsStr && allJobs.length > 0) {
+      const dummyStats: { [key: string]: number[] } = {};
+      const now = Date.now();
+      const day = 24 * 60 * 60 * 1000;
+
+      // 랜덤하게 지원 기록 생성
+      allJobs.forEach(job => {
+        if (Math.random() > 0.5) {
+          const count = Math.floor(Math.random() * 20); // 0~20회
+          const times = [];
+          for (let i = 0; i < count; i++) {
+            // 최근 7일 이내 랜덤 시간
+            times.push(now - Math.floor(Math.random() * 7 * day));
+          }
+          dummyStats[job.id] = times;
+        }
+      });
+      localStorage.setItem("db_job_applies", JSON.stringify(dummyStats));
+    }
+  }, [allJobs]);
+
+  const handleRisingJobsClick = () => {
+    const statsStr = localStorage.getItem("db_job_applies");
+    const stats = statsStr ? JSON.parse(statsStr) : {};
+    const now = Date.now();
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+
+    // 각 공고별 최근 7일 지원 수 계산
+    const jobScores = allJobs.map(job => {
+      const timestamps: number[] = stats[job.id] || [];
+      const recentCount = timestamps.filter(t => (now - t) <= sevenDays).length;
+      return { ...job, recentCount };
+    });
+
+    // 지원 수 내림차순 정렬 후 상위 6개
+    const top6 = jobScores
+      .sort((a, b) => b.recentCount - a.recentCount)
+      .slice(0, 6);
+
+    setRisingJobs(top6);
+    setShowRisingModal(true);
   };
 
-  const dummyJobs = [
-    {
-      id: 1,
-      company: "(주)테크컴퍼니",
-      title: "프론트엔드 개발자 긴급 채용",
-      location: "서울 강남구",
-      pay: "연봉 4,500+",
-    },
-    {
-      id: 2,
-      company: "카페그라운드",
-      title: "주말 오전 파트타임 구인",
-      location: "경기 수원시",
-      pay: "시급 10,000원",
-    },
-    {
-      id: 3,
-      company: "디자인스튜디오",
-      title: "웹 퍼블리셔 계약직 모집",
-      location: "서울 마포구",
-      pay: "월 300+",
-    },
-    {
-      id: 4,
-      company: "물류센터",
-      title: "단기 물류 보조 알바생",
-      location: "인천 서구",
-      pay: "일급 12만원",
-    },
-  ];
+  // handleSearchAction 제거됨 (HeroSection에 인라인으로 전달)
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center">
       <h1 className="text-4xl font-bold mb-4">구직자 전용 랜딩페이지</h1>
       <p className="text-gray-600">개인 회원만 접근 가능합니다.</p>
 
-      <div className="w-screen h-screen bg-white flex flex-col overflow-x-hidden">
+      <div className="w-screen min-h-screen bg-white flex flex-col overflow-x-hidden">
         {/* 1. 상단 프로모션 배너 */}
         <div className="w-full h-[70px] bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white shrink-0 z-50 shadow-sm">
           <p className="text-sm sm:text-base font-medium">
@@ -71,11 +141,16 @@ export default function UserLanding() {
           <Navigation />
 
           <main className="py-10 space-y-24">
-            {/* 2. Hero 섹션 (Props 전달) */}
+            {/* 2. Hero 섹션 */}
             <HeroSection
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
-              onSearchAction={handleSearchAction}
+              onSearchAction={(_val) => {
+                // HeroSearch에서 엔터/버튼 누르면 스크롤 이동
+                setTimeout(() => {
+                  searchSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+                }, 100);
+              }}
             />
 
             {/* 3. 퀵 메뉴 */}
@@ -108,6 +183,7 @@ export default function UserLanding() {
               ].map((item, idx) => (
                 <div
                   key={idx}
+                  onClick={item.title === "급상승 공고" ? handleRisingJobsClick : undefined}
                   className="p-6 border border-gray-100 rounded-2xl hover:shadow-lg transition-all cursor-pointer group bg-white"
                 >
                   <div
@@ -123,36 +199,75 @@ export default function UserLanding() {
               ))}
             </section>
 
-            {/* 4. 검색 결과 영역 */}
+            {/* 4. 최근 업데이트된 공고 (기존 CompanySearch) */}
             <div ref={searchSectionRef} className="scroll-mt-20">
               <CompanySearch
-                externalFilter={activeFilter}
-                setExternalFilter={setActiveFilter}
-                keyword={searchQuery}
+                jobs={allJobs} // ✅ 실제 공고 데이터 전달
               />
             </div>
 
-            {/* 5. 추천 공고 */}
-            <section>
-              <div className="flex justify-between items-center mb-8">
+            {/* 5. Recommended for You (필터 적용 영역) */}
+            <section id="recommended-jobs">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 italic">
+                  <h2 className="text-2xl font-bold text-gray-900 italic flex items-center gap-2">
                     Recommended for You
+                    {searchQuery && (
+                      <span className="text-base font-normal text-blue-600 not-italic bg-blue-50 px-3 py-1 rounded-full">
+                        "{searchQuery}" 검색 결과
+                      </span>
+                    )}
                   </h2>
                   <p className="text-gray-500 mt-1 text-sm">
-                    최근 본 공고와 비슷한 일자리에요.
+                    {searchQuery
+                      ? "입력하신 키워드와 관련된 공고를 찾아보았어요."
+                      : "당신을 위한 맞춤 공고를 확인해보세요."}
                   </p>
                 </div>
-                <button className="text-blue-600 font-semibold flex items-center gap-1 hover:gap-2 transition-all">
-                  전체보기 <FiArrowRight />
-                </button>
+
+                {/* 필터 버튼들 (전체보기 대신 배치) */}
+                <div className="flex flex-wrap gap-2">
+                  {filterButtons.map((btn) => (
+                    <button
+                      key={btn.value}
+                      onClick={() => setActiveFilter(btn.value)}
+                      className={`px-4 py-2 rounded-full text-sm font-bold transition-all border ${activeFilter === btn.value
+                        ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-100"
+                        : "bg-white border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-500"
+                        }`}
+                    >
+                      {btn.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {dummyJobs.map((job) => (
-                  <JobCard key={job.id} {...job} />
-                ))}
-              </div>
+              {filteredRecommendedJobs.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {filteredRecommendedJobs.map((job) => (
+                    <JobCard
+                      key={job.id}
+                      title={job.title}
+                      company={job.company}
+                      location={job.location}
+                      pay={job.pay}
+                    // id={job.id} // 필요시 JobCard에 id prop 추가하여 상세페이지 이동 연동
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="py-20 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                  <div className="flex justify-center mb-4">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 text-2xl">
+                      <FiSearch />
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">검색 결과가 없어요</h3>
+                  <p className="text-gray-500 text-sm">
+                    다른 키워드로 검색하거나 필터를 변경해보세요.
+                  </p>
+                </div>
+              )}
             </section>
           </main>
 
@@ -178,21 +293,63 @@ export default function UserLanding() {
             </div>
           </footer>
         </div>
-        <button
-          onClick={() => navigate("/Login")}
-          className="fixed bottom-24 right-8 w-14 h-14 bg-gray-900 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 group"
-        >
-          <span className="text-[10px] font-bold mb-1">LOGIN</span>
-          <FiArrowRight className="rotate-180 text-xl group-hover:-translate-x-1 transition-transform" />
-        </button>
-        <button
-          onClick={() => navigate(-1)}
-          className="fixed bottom-8 right-8 w-14 h-14 bg-gray-900 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 group"
-        >
-          <span className="text-[10px] font-bold mb-1">이전</span>
-          <FiArrowRight className="rotate-180 text-xl group-hover:-translate-x-1 transition-transform" />
-        </button>
+
       </div>
-    </div>
+
+
+      {/* 급상승 공고 모달 */}
+      {
+        showRisingModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-3xl w-full max-w-6xl max-h-[90vh] overflow-y-auto p-8 relative shadow-2xl">
+              <button
+                onClick={() => setShowRisingModal(false)}
+                className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <FiX className="text-2xl text-gray-500" />
+              </button>
+
+              <div className="mb-8">
+                <h2 className="text-3xl font-black text-gray-900 flex items-center gap-3">
+                  <FiTrendingUp className="text-red-500" />
+                  급상승 공고 TOP 6
+                </h2>
+                <p className="text-gray-500 mt-2 font-medium">
+                  최근 7일간 가장 많은 지원자가 몰린 인기 공고입니다. 🔥
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {risingJobs.map((job, idx) => (
+                  <div key={job.id} className="relative">
+                    {/* 순위 뱃지 */}
+                    <div className="absolute -top-3 -left-3 w-10 h-10 bg-red-500 text-white rounded-xl shadow-lg flex items-center justify-center font-black text-xl z-10 border-2 border-white">
+                      {idx + 1}
+                    </div>
+                    <JobCard
+                      title={job.title}
+                      company={job.company}
+                      location={job.location}
+                      pay={job.pay}
+                    />
+                    <div className="mt-2 text-right">
+                      <span className="text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded-full">
+                        {(job as any).recentCount}명 지원중!
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {risingJobs.length === 0 && (
+                <div className="py-20 text-center text-gray-400">
+                  <p>집계된 데이터가 없습니다.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      }
+    </div >
   );
 }

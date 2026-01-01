@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   FiArrowLeft,
   FiSave,
@@ -8,30 +8,23 @@ import {
   FiCheckCircle,
 } from "react-icons/fi";
 import Navigation from "./CompanyNavigation"; // 기업용 네비게이션
+import type { Job } from "../../types/job";
+import { CATEGORY_MENU } from "../../constants/menuData";
 
-// 1. 폼 데이터의 구체적인 타입 정의
-interface JobPostData {
-  title: string;
+// 1. 폼 데이터의 구체적인 타입 정의 (Job 인터페이스 활용)
+interface JobPostData extends Omit<Job, 'id' | 'postedAt' | 'company' | 'tags' | 'pay' | 'deadline'> {
+  // Job 인터페이스에서 제외하거나 오버라이드할 속성들
   companyName: string;
-  category: string;
-  jobType: string;
-  location: string;
-  experience: string;
-  education: string;
+  menu: string; // 대분류 (예: 채용정보, 단기알바)
+  category: string; // 소분류 (예: 스타트업, 하루알바)
   salaryType: string;
   salaryMin: string;
   salaryMax: string;
-  description: string;
-  responsibilities: string;
-  qualifications: string;
-  benefits: string;
-  contactEmail: string;
-  contactPhone: string;
-  deadlineType: "date" | "always"; // 고정된 값 설정
+  deadlineType: "date" | "always";
   deadlineDate: string;
   autoClose: boolean;
-  keywords: string[];
-  attachments: File[]; // 혹은 필요한 파일 객체 타입
+  keywords: string[]; // Job.tags 매핑
+  attachments: File[];
 }
 
 const NewJobPostPage = () => {
@@ -40,6 +33,7 @@ const NewJobPostPage = () => {
   const [formData, setFormData] = useState<JobPostData>({
     title: "",
     companyName: "테크컴퍼니",
+    menu: "", // 초기값
     category: "",
     jobType: "",
     location: "",
@@ -60,6 +54,62 @@ const NewJobPostPage = () => {
     keywords: [],
     attachments: [],
   });
+  const { jobId } = useParams(); // URL 파라미터에서 jobId 확인
+  const isEditMode = Boolean(jobId);
+
+  // 수정 모드일 경우 데이터 로드
+  useEffect(() => {
+    if (isEditMode && jobId) {
+      const storedJobsStr = localStorage.getItem("db_jobs");
+      if (storedJobsStr) {
+        const storedJobs: Job[] = JSON.parse(storedJobsStr);
+        const job = storedJobs.find((j) => String(j.id) === String(jobId));
+
+        if (job) {
+          // Job 데이터를 Form 데이터로 변환
+          // const salaryParts = job.pay.split(' '); (미사용)
+          // 간단한 파싱 로직 (급여 형식이 복잡할 수 있으므로 주의)
+          let sType = "면접 후 결정";
+          let sMin = "";
+          let sMax = "";
+
+          if (job.pay !== "면접 후 결정") {
+            sType = job.pay.split(' ')[0];
+            const range = job.pay.split(' ')[1]?.replace('만원', '');
+            if (range && range.includes('~')) {
+              [sMin, sMax] = range.split('~');
+            }
+          }
+
+          setFormData({
+            title: job.title,
+            companyName: job.company,
+            menu: job.menu || "",
+            category: job.category,
+            jobType: job.jobType,
+            location: job.location,
+            experience: job.experience,
+            education: job.education,
+            salaryType: sType,
+            salaryMin: sMin,
+            salaryMax: sMax,
+            description: job.description,
+            responsibilities: job.responsibilities,
+            qualifications: job.qualifications,
+            benefits: job.benefits || "",
+            contactEmail: job.contactEmail || "",
+            contactPhone: job.contactPhone || "",
+            deadlineType: job.deadline === "상시채용" ? "always" : "date",
+            deadlineDate: job.deadline === "상시채용" ? "" : job.deadline,
+            autoClose: false, // 저장된 값이 없으면 기본값
+            keywords: job.tags,
+            attachments: [], // 파일은 보안상 다시 로드 불가 (새로 추가만 가능)
+          });
+        }
+      }
+    }
+  }, [isEditMode, jobId]);
+
   const [newKeyword, setNewKeyword] = useState("");
 
   // 3. 입력값 핸들러에서도 타입을 안전하게 처리
@@ -106,10 +156,58 @@ const NewJobPostPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // 최종 제출 로직 (API 호출 등)
-    console.log("Form Data:", formData);
-    alert("채용 공고가 성공적으로 등록되었습니다!");
-    navigate("/company/category/공고관리/진행중인 공고"); // 등록 후 이동
+
+    // 1. 기존 데이터 로드
+    const storedJobsStr = localStorage.getItem("db_jobs");
+    let storedJobs: Job[] = storedJobsStr ? JSON.parse(storedJobsStr) : [];
+
+    // 2. ID 설정 (수정 시 기존 ID 유지)
+    const idToSave = isEditMode && jobId ? jobId : Date.now();
+
+    // 3. pay 문자열 조합
+    const payString = formData.salaryType === "면접 후 결정"
+      ? "면접 후 결정"
+      : `${formData.salaryType} ${formData.salaryMin}~${formData.salaryMax}만원`;
+
+    // 4. Job 객체 생성
+    const newJob: Job = {
+      id: idToSave,
+      title: formData.title,
+      company: formData.companyName,
+      location: formData.location,
+      category: formData.category,
+      jobType: formData.jobType,
+      pay: payString,
+      experience: formData.experience,
+      education: formData.education,
+      description: formData.description,
+      responsibilities: formData.responsibilities,
+      qualifications: formData.qualifications,
+      benefits: formData.benefits,
+      deadline: formData.deadlineType === "always" ? "상시채용" : formData.deadlineDate,
+      tags: formData.keywords,
+      isUrgent: false, // 기본값
+      contactEmail: formData.contactEmail,
+      contactPhone: formData.contactPhone,
+      postedAt: new Date().toISOString().split('T')[0],
+      menu: formData.menu,
+      status: 'active' // 기본값 활성
+      // status: isEditMode && existingJob ? existingJob.status : 'active' (기존 상태 유지 로직이 더 좋으나 간단히 active로 갱신)
+    };
+
+    // 5. 저장 (수정 시 교체, 신규 시 추가)
+    if (isEditMode) {
+      storedJobs = storedJobs.map(job => String(job.id) === String(idToSave) ? { ...newJob, postedAt: job.postedAt, status: job.status || 'active' } : job);
+    } else {
+      storedJobs = [newJob, ...storedJobs];
+    }
+
+    localStorage.setItem("db_jobs", JSON.stringify(storedJobs));
+
+    alert(isEditMode ? "공고가 수정되었습니다." : "채용 공고가 성공적으로 등록되었습니다!");
+    // 카테고리 페이지 대신 대시보드로 이동하거나 상황에 따라 다르게
+    // navigate(`/category/${formData.menu}/${formData.category}`);
+    navigate('/company/Dashboard'); // 대시보드로 이동하여 등록된/수정된 공고 확인 유도
   };
 
   return (
@@ -126,7 +224,7 @@ const NewJobPostPage = () => {
             <FiArrowLeft /> 뒤로가기
           </button>
           <h1 className="text-3xl font-black text-gray-900">
-            새 채용 공고 등록
+            {isEditMode ? "채용 공고 수정" : "새 채용 공고 등록"}
           </h1>
           <div className="w-20"></div> {/* Space Placeholder */}
         </div>
@@ -137,28 +235,25 @@ const NewJobPostPage = () => {
             (stepName, index) => (
               <div key={stepName} className="flex items-center gap-2">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                    currentStep > index + 1
-                      ? "bg-blue-600 text-white"
-                      : currentStep === index + 1
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${currentStep > index + 1
+                    ? "bg-blue-600 text-white"
+                    : currentStep === index + 1
                       ? "bg-blue-200 text-blue-800"
                       : "bg-gray-200 text-gray-500"
-                  }`}
+                    }`}
                 >
                   {currentStep > index + 1 ? <FiCheckCircle /> : index + 1}
                 </div>
                 <span
-                  className={`text-sm font-medium ${
-                    currentStep >= index + 1 ? "text-gray-900" : "text-gray-500"
-                  }`}
+                  className={`text-sm font-medium ${currentStep >= index + 1 ? "text-gray-900" : "text-gray-500"
+                    }`}
                 >
                   {stepName}
                 </span>
                 {index < 3 && (
                   <div
-                    className={`h-0.5 w-16 mx-2 ${
-                      currentStep > index + 1 ? "bg-blue-300" : "bg-gray-200"
-                    }`}
+                    className={`h-0.5 w-16 mx-2 ${currentStep > index + 1 ? "bg-blue-300" : "bg-gray-200"
+                      }`}
                   ></div>
                 )}
               </div>
@@ -197,10 +292,34 @@ const NewJobPostPage = () => {
                   </div>
                   <div>
                     <label
+                      htmlFor="menu"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      상위 카테고리
+                    </label>
+                    <select
+                      id="menu"
+                      name="menu"
+                      value={formData.menu}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      required
+                    >
+                      <option value="">선택하세요</option>
+                      {CATEGORY_MENU.map((menu) => (
+                        <option key={menu.name} value={menu.name}>
+                          {menu.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
                       htmlFor="category"
                       className="block text-sm font-medium text-gray-700 mb-2"
                     >
-                      직무 카테고리
+                      세부 카테고리
                     </label>
                     <select
                       id="category"
@@ -209,11 +328,19 @@ const NewJobPostPage = () => {
                       onChange={handleChange}
                       className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 transition-colors"
                       required
+                      disabled={!formData.menu} // 상위 메뉴 미선택 시 비활성화
                     >
-                      <option value="">선택</option>
-                      <option value="IT/개발">IT/개발</option>
-                      <option value="디자인">디자인</option>
-                      <option value="마케팅">마케팅</option>
+                      <option value="">
+                        {formData.menu ? "선택하세요" : "상위 카테고리를 먼저 선택하세요"}
+                      </option>
+                      {formData.menu &&
+                        CATEGORY_MENU.find((m) => m.name === formData.menu)?.sub.map(
+                          (subItem) => (
+                            <option key={subItem} value={subItem}>
+                              {subItem}
+                            </option>
+                          )
+                        )}
                     </select>
                   </div>
                   <div>
@@ -614,7 +741,7 @@ const NewJobPostPage = () => {
                   onClick={handleSubmit} // form onSubmit 대신 버튼 onClick에 연결
                   className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-all ml-auto"
                 >
-                  <FiSave /> 공고 등록 완료
+                  <FiSave /> {isEditMode ? "수정 완료" : "공고 등록 완료"}
                 </button>
               )}
             </div>

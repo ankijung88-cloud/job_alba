@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "./company/CompanyNavigation";
 import HeroSection from "./company/HeroSection";
@@ -9,6 +9,24 @@ import { FiArrowRight } from "react-icons/fi";
 export default function CompanyLanding() {
   const navigate = useNavigate();
   const searchSectionRef = useRef<HTMLDivElement>(null);
+
+  const [users, setUsers] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Load Real Users
+  useEffect(() => {
+    const usersStr = localStorage.getItem("db_users");
+    if (usersStr) {
+      try {
+        const usersObj = JSON.parse(usersStr);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const usersList = Object.values(usersObj).filter((u: any) => u.id !== "admin" && u.role !== "ADMIN");
+        setUsers(usersList);
+      } catch (e) {
+        console.error("Failed to load users", e);
+      }
+    }
+  }, []);
 
   // 검색 버튼 클릭 시 실행될 함수
   const scrollToSearch = () => {
@@ -62,11 +80,18 @@ export default function CompanyLanding() {
           <Navigation />
 
           <main className="flex-1 py-12">
-            {/* HeroSection에 스크롤 함수를 전달하여 검색 버튼과 연결 */}
-            <HeroSection onSearchClick={scrollToSearch} />
-            {/* 인재 검색 결과 페이지 (연결 지점) */}
+            {/* HeroSection에 스크롤 함수를 전달하여 검색 버튼과 연결 + 검색어 전달 */}
+            <HeroSection
+              onSearchClick={scrollToSearch}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+            />
+            {/* 인재 검색 결과 페이지 (연결 지점): 실제 유저 데이터와 검색어 전달 */}
             <div ref={searchSectionRef} className="mt-20 border-t pt-10">
-              <TalentSearch />
+              <TalentSearch
+                talents={users}
+                searchQuery={searchQuery}
+              />
             </div>
 
             <div className="flex justify-between items-end mb-8 mt-12">
@@ -87,22 +112,7 @@ export default function CompanyLanding() {
             © 2025 JOB-ALBA. All rights reserved.
           </footer>
         </div>
-        <button
-          onClick={() => navigate("/Login")}
-          className="fixed bottom-24 right-8 w-14 h-14 bg-gray-900 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 group"
-        >
-          <span className="text-[10px] font-bold mb-1">LOGIN</span>
-          <FiArrowRight className="rotate-180 text-xl group-hover:-translate-x-1 transition-transform" />
-        </button>
 
-        {/* 플로팅 뒤로가기 버튼 */}
-        <button
-          onClick={() => navigate(-1)}
-          className="fixed bottom-8 right-8 w-14 h-14 bg-gray-900 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 group"
-        >
-          <span className="text-[10px] font-bold mb-1">이전</span>
-          <FiArrowRight className="rotate-180 text-xl group-hover:-translate-x-1 transition-transform" />
-        </button>
       </div>
     </div>
   );

@@ -7,9 +7,10 @@ import {
   FiInfo,
   FiSearch,
 } from "react-icons/fi"; // FiSearch 추가
-import { useEffect } from "react";
-import { CATEGORY_DETAILS } from "../../data_User/categoryData";
-import { JOBS_BY_CATEGORY } from "../../data_User/categoryJobs"; // ✅ 공고 데이터 임포트
+import { useEffect, useState } from "react";
+import { CATEGORY_DETAILS } from "../../constants/categoryData";
+import { JOBS_BY_CATEGORY } from "../../constants/categoryJobs";
+import type { Job } from "../../types/job"; // Shared type
 
 const CategoryPage = () => {
   const { menuName, subName } = useParams<{
@@ -22,20 +23,59 @@ const CategoryPage = () => {
   const decodedMenu = decodeURIComponent(menuName || "");
   const decodedSub = decodeURIComponent(subName || "");
 
-  // 1. 카테고리 정보 매핑
-  const categoryInfo = CATEGORY_DETAILS[decodedSub] || {
-    description:
-      "시스템이 실시간으로 분석한 가장 평점이 높고 안전한 공고들을 보여드립니다.",
-    tags: ["#신규공고", "#실시간", "#인기"],
-    themeColor: "blue",
-  };
+  // 1. 카테고리 정보 매핑 (없으면 동적 생성)
+  let categoryInfo = CATEGORY_DETAILS[decodedSub];
 
-  // 2. ✅ 해당 카테고리의 실제 공고 리스트 가져오기
-  const jobList = JOBS_BY_CATEGORY[decodedSub] || [];
+  // 외국인 채용 카테고리에 대한 동적 정보 생성
+  if (!categoryInfo && decodedMenu === "외국인채용") {
+    categoryInfo = {
+      description: `${decodedSub} 비자 소지자를 위한 전문 채용 공고를 모았습니다.`,
+      tags: ["#외국인채용", `#${decodedSub}`, "#비자가능"],
+      themeColor: "red",
+    };
+  }
+
+  // 기본값 (여전히 없으면)
+  if (!categoryInfo) {
+    categoryInfo = {
+      description: "시스템이 실시간으로 분석한 가장 평점이 높고 안전한 공고들을 보여드립니다.",
+      tags: ["#신규공고", "#실시간", "#인기"],
+      themeColor: "blue",
+    };
+  }
+
+  // 2. ✅ 해당 카테고리의 실제 공고 리스트 가져오기 (Static + LocalStorage)
+  const [jobList, setJobList] = useState<Job[]>([]);
 
   useEffect(() => {
+    // 1. Static Data
+    const staticJobs = (JOBS_BY_CATEGORY[decodedSub] || []) as unknown as Job[];
+
+    // 2. Dynamic Data from LocalStorage
+    const storedJobsStr = localStorage.getItem("db_jobs");
+    const storedJobs: Job[] = storedJobsStr ? JSON.parse(storedJobsStr) : [];
+
+    // 3. Filter Dynamic Jobs by Category
+    let filteredDynamicJobs: Job[] = [];
+
+    if (decodedMenu === "외국인채용") {
+      // 외국인 채용은 'category' 필드 매칭이 아니라 태그나 제목에서 비자 코드(예: E-9)를 찾음
+      filteredDynamicJobs = storedJobs.filter(job =>
+        (job.tags && job.tags.some(tag => tag.includes(decodedSub))) ||
+        (job.title.includes(decodedSub)) ||
+        (job.benefits && job.benefits.includes(decodedSub)) ||
+        (job.description && job.description.includes(decodedSub))
+      );
+    } else {
+      // 일반 카테고리는 category 필드 일치 여부 확인
+      filteredDynamicJobs = storedJobs.filter(job => job.category === decodedSub);
+    }
+
+    // 4. Merge
+    setJobList([...filteredDynamicJobs, ...staticJobs]);
+
     window.scrollTo(0, 0);
-  }, [menuName, subName]);
+  }, [menuName, subName, decodedSub]);
 
   if (!menuName || !subName) {
     return (
@@ -86,9 +126,7 @@ const CategoryPage = () => {
                 <div className="max-w-2xl">
                   <div className="flex items-center gap-2 mb-4">
                     <span
-                      className={`px-3 py-1 bg-${
-                        categoryInfo.themeColor || "blue"
-                      }-600 text-white text-xs font-black rounded-full uppercase tracking-tighter`}
+                      className={`px-3 py-1 bg-${categoryInfo.themeColor}-600 text-white text-xs font-black rounded-full uppercase tracking-tighter`}
                     >
                       Verified Category
                     </span>
@@ -96,9 +134,7 @@ const CategoryPage = () => {
                   <h1 className="text-4xl font-black text-gray-900 tracking-tight leading-tight">
                     {decodedSub}
                     <span
-                      className={`block text-${
-                        categoryInfo.themeColor || "blue"
-                      }-600 text-2xl mt-1 font-bold`}
+                      className={`block text-${categoryInfo.themeColor}-600 text-2xl mt-1 font-bold`}
                     >
                       맞춤 채용 정보를 확인하세요
                     </span>
@@ -119,14 +155,12 @@ const CategoryPage = () => {
                   </div>
                 </div>
 
-                <button className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-2xl font-bold shadow-xl hover:bg-blue-600 transition-all hover:-translate-y-1 active:scale-95">
+                <button className={`flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-2xl font-bold shadow-xl hover:bg-${categoryInfo.themeColor}-600 transition-all hover:-translate-y-1 active:scale-95`}>
                   <FiFilter /> 상세 조건 설정
                 </button>
               </div>
               <div
-                className={`absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-64 h-64 bg-${
-                  categoryInfo.themeColor || "blue"
-                }-50 rounded-full blur-3xl opacity-50`}
+                className={`absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-64 h-64 bg-${categoryInfo.themeColor}-50 rounded-full blur-3xl opacity-50`}
               ></div>
             </div>
 
@@ -204,20 +238,7 @@ const CategoryPage = () => {
               )}
             </div>
           </main>
-          <button
-            onClick={() => navigate("/Login")}
-            className="fixed bottom-24 right-8 w-14 h-14 bg-gray-900 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 group"
-          >
-            <span className="text-[10px] font-bold mb-1">LOGIN</span>
-            <FiArrowRight className="rotate-180 text-xl group-hover:-translate-x-1 transition-transform" />
-          </button>
-          <button
-            onClick={() => navigate(-1)}
-            className="fixed bottom-8 right-8 w-14 h-14 bg-gray-900 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 group"
-          >
-            <span className="text-[10px] font-bold mb-1">이전</span>
-            <FiArrowRight className="rotate-180 text-xl group-hover:-translate-x-1 transition-transform" />
-          </button>
+
         </div>
       </div>
     </div>
