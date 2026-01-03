@@ -606,6 +606,12 @@ const AdminDashboard = () => {
                     </div>
                     <div className="flex items-center gap-4">
                         <button
+                            onClick={() => navigate("/admin/notices")}
+                            className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
+                        >
+                            <FiFileText /> 공지사항 관리
+                        </button>
+                        <button
                             onClick={() => navigate("/admin/edit")}
                             className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
                         >

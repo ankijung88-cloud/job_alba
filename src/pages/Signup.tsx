@@ -208,7 +208,7 @@ function Signup() {
             localStorage.setItem("db_users", JSON.stringify(users));
 
             alert(`회원가입이 완료되었습니다!\n회원번호: ${memberNumber}\n로그인해주세요.`);
-            navigate("/Login");
+            navigate("/");
 
         } else {
             if (!form.companyName || !form.regNumber) {
@@ -245,7 +245,7 @@ function Signup() {
             localStorage.setItem("db_companies", JSON.stringify(companies));
 
             alert(`기업 회원가입이 완료되었습니다!\n회원번호: ${memberNumber}\n로그인해주세요.`);
-            navigate("/Login");
+            navigate("/");
         }
     };
 
@@ -682,7 +682,7 @@ function Signup() {
 
                 <div className="mt-6 text-center">
                     <button
-                        onClick={() => navigate("/Login")}
+                        onClick={() => navigate("/")}
                         className="text-gray-500 font-bold hover:text-gray-900 flex items-center justify-center gap-2 mx-auto"
                     >
                         <FiArrowLeft /> 로그인 화면으로 돌아가기

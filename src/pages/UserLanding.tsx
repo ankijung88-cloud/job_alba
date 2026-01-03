@@ -1,14 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import Navigation from "./user/Navigation";
 import HeroSection from "./user/HeroSection";
 import JobCard from "./user/JobCard";
 import CompanySearch from "./user/CompanySearch";
 import type { JobData } from "./user/CompanySearch"; // Type-only import
-import { FiTrendingUp, FiGift, FiMap, FiArrowRight, FiSearch, FiLogIn, FiX } from "react-icons/fi";
+import { FiTrendingUp, FiGift, FiMap, FiArrowRight, FiSearch, FiX } from "react-icons/fi";
 
 export default function UserLanding() {
-  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("전체");
   // 퀵 필터 버튼 목록 (UserLanding에 정의)

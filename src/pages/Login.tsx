@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiUser, FiBriefcase, FiLock, FiArrowRight, FiUserPlus, FiSettings, FiHelpCircle, FiArrowLeft } from "react-icons/fi";
+import { FiUser, FiBriefcase, FiLock, FiArrowRight, FiUserPlus, FiHelpCircle, FiArrowLeft } from "react-icons/fi";
 
 function Login() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"USER" | "COMPANY" | "ADMIN">("USER");
+  const [activeTab, setActiveTab] = useState<"USER" | "COMPANY">("USER");
   const [viewMode, setViewMode] = useState<"LOGIN" | "FIND_ID" | "FIND_PW">("LOGIN");
 
   const [form, setForm] = useState({
@@ -20,37 +20,6 @@ function Login() {
     regNumber: "",
     targetId: "", // 비번 찾기용 ID
   });
-
-  // Init Admin DB Logic (hardcode if empty to allow edit)
-  // Init Admin DB Logic (Self-Healing)
-  useEffect(() => {
-    const adminStr = localStorage.getItem("db_admin");
-    const defaultAdmin = {
-      id: "admin",
-      password: "admin1234",
-      name: "최고관리자",
-      email: "admin@jobalba.com",
-      role: "ADMIN"
-    };
-
-    if (!adminStr) {
-      // Missing -> Create
-      localStorage.setItem("db_admin", JSON.stringify(defaultAdmin));
-    } else {
-      // Exists -> Validate Integrity
-      try {
-        const admin = JSON.parse(adminStr);
-        // 필수 필드 검증
-        if (!admin.id || !admin.password || !admin.role) {
-          console.warn("db_admin corrupted. Restoring default.");
-          localStorage.setItem("db_admin", JSON.stringify(defaultAdmin));
-        }
-      } catch (e) {
-        console.error("db_admin JSON parse error. Restoring default.", e);
-        localStorage.setItem("db_admin", JSON.stringify(defaultAdmin));
-      }
-    }
-  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -68,19 +37,7 @@ function Login() {
       return;
     }
 
-    if (activeTab === "ADMIN") {
-      const adminStr = localStorage.getItem("db_admin");
-      const admin = adminStr ? JSON.parse(adminStr) : null;
-
-      if (admin && admin.id === form.id && admin.password === form.password) {
-        localStorage.setItem("role", "ADMIN");
-        localStorage.setItem("adminProfile", JSON.stringify(admin)); // 세션 저장
-        alert(`관리자 모드로 접속합니다. (${admin.name})`);
-        navigate("/admin/dashboard");
-      } else {
-        alert("관리자 정보가 일치하지 않습니다.");
-      }
-    } else if (activeTab === "USER") {
+    if (activeTab === "USER") {
       const usersStr = localStorage.getItem("db_users");
       const users = usersStr ? JSON.parse(usersStr) : {};
       const user = users[form.id];
@@ -124,7 +81,7 @@ function Login() {
       } else {
         alert("일치하는 회원 정보를 찾을 수 없습니다.");
       }
-    } else if (activeTab === "COMPANY") {
+    } else {
       const companiesStr = localStorage.getItem("db_companies");
       const companies = companiesStr ? JSON.parse(companiesStr) : {};
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -137,8 +94,6 @@ function Login() {
       } else {
         alert("일치하는 기업 정보를 찾을 수 없습니다.");
       }
-    } else {
-      alert("관리자 계정 찾기는 지원하지 않습니다.");
     }
   };
 
@@ -157,7 +112,7 @@ function Login() {
       } else {
         alert("정보가 일치하지 않습니다.");
       }
-    } else if (activeTab === "COMPANY") {
+    } else {
       const companiesStr = localStorage.getItem("db_companies");
       const companies = companiesStr ? JSON.parse(companiesStr) : {};
       const company = companies[findForm.targetId];
@@ -170,8 +125,6 @@ function Login() {
       } else {
         alert("정보가 일치하지 않습니다.");
       }
-    } else {
-      alert("관리자 계정 찾기는 지원하지 않습니다.");
     }
   };
 
@@ -191,9 +144,7 @@ function Login() {
               <h2 className="text-2xl font-bold leading-tight">
                 {activeTab === "USER"
                   ? "꿈꾸던 커리어의 시작,"
-                  : activeTab === "COMPANY"
-                    ? "최고의 인재를 만나는 곳,"
-                    : "시스템 통합 관리,"}
+                  : "최고의 인재를 만나는 곳,"}
                 <br />
                 <span className="text-blue-500">JOB-ALBA</span>와 함께하세요.
               </h2>
@@ -235,15 +186,6 @@ function Login() {
                   }`}
               >
                 <FiBriefcase /> 기업
-              </button>
-              <button
-                onClick={() => setActiveTab("ADMIN")}
-                className={`flex-1 py-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${activeTab === "ADMIN"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-                  }`}
-              >
-                <FiSettings /> 관리자
               </button>
             </div>
           )}
@@ -291,25 +233,21 @@ function Login() {
                 </button>
               </form>
 
-              {activeTab !== "ADMIN" && (
-                <div className="mt-6 flex justify-center gap-4 text-xs text-gray-500 font-medium">
-                  <button onClick={() => setViewMode("FIND_ID")} className="hover:text-blue-600 transition-colors">아이디 찾기</button>
-                  <span className="text-gray-300">|</span>
-                  <button onClick={() => setViewMode("FIND_PW")} className="hover:text-blue-600 transition-colors">비밀번호 찾기</button>
-                </div>
-              )}
+              <div className="mt-6 flex justify-center gap-4 text-xs text-gray-500 font-medium">
+                <button onClick={() => setViewMode("FIND_ID")} className="hover:text-blue-600 transition-colors">아이디 찾기</button>
+                <span className="text-gray-300">|</span>
+                <button onClick={() => setViewMode("FIND_PW")} className="hover:text-blue-600 transition-colors">비밀번호 찾기</button>
+              </div>
 
-              {activeTab !== "ADMIN" && (
-                <div className="mt-8 text-center pt-8 border-t border-gray-100">
-                  <p className="text-gray-500 text-sm mb-4">계정이 없으신가요?</p>
-                  <button
-                    onClick={() => navigate("/signup")}
-                    className="w-full py-3 border-2 border-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
-                  >
-                    <FiUserPlus /> 무료 회원가입하기
-                  </button>
-                </div>
-              )}
+              <div className="mt-8 text-center pt-8 border-t border-gray-100">
+                <p className="text-gray-500 text-sm mb-4">계정이 없으신가요?</p>
+                <button
+                  onClick={() => navigate("/signup")}
+                  className="w-full py-3 border-2 border-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                >
+                  <FiUserPlus /> 무료 회원가입하기
+                </button>
+              </div>
             </>
           )}
 

@@ -14,6 +14,8 @@ import UserProfileEdit from "./pages/user/UserProfileEdit";
 import CompanyProfileEdit from "./pages/company/CompanyProfileEdit";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProfileEdit from "./pages/admin/AdminProfileEdit";
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminNoticeManage from "./pages/admin/AdminNoticeManage";
 import MainLayout from "./layouts/MainLayout";
 
 export default function App() {
@@ -23,6 +25,7 @@ export default function App() {
         <Route element={<MainLayout />}>
           {/* 공용 라우트 */}
           <Route path="/" element={<Login />} />
+          <Route path="/admin" element={<AdminLogin />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/user/profile" element={<UserProfileEdit />} />
 
@@ -47,6 +50,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRole="ADMIN">
                 <AdminProfileEdit />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/notices"
+            element={
+              <ProtectedRoute allowedRole="ADMIN">
+                <AdminNoticeManage />
               </ProtectedRoute>
             }
           />

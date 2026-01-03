@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Link } from "react-router-dom"; // ✅ Link 컴포넌트 추가
+import { Link, useNavigate } from "react-router-dom"; // ✅ Link 컴포넌트 추가
 import { FiGlobe, FiChevronDown } from "react-icons/fi";
 import { CATEGORY_MENU } from "../../constants/menuData";
 
 const Navigation = () => {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   // 메뉴 데이터 (기존과 동일하지만 shared constant 사용)
   const menuData = CATEGORY_MENU.slice(0, 4); // 외국인 채용 제외하고 상위 4개만 메인 메뉴로 사용 (필요 시 조정)
@@ -143,6 +144,16 @@ const Navigation = () => {
             >
               프로필 수정
             </Link>
+            <button
+              onClick={() => {
+                localStorage.removeItem("role");
+                localStorage.removeItem("userProfile");
+                navigate("/");
+              }}
+              className="px-4 py-2 rounded-lg text-xs font-bold text-red-500 hover:bg-red-50 border border-red-200 transition bg-white"
+            >
+              로그아웃
+            </button>
           </div>
         </div>
       </div>

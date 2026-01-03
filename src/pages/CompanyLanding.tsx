@@ -1,20 +1,20 @@
 import { useRef, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import Navigation from "./company/CompanyNavigation";
 import HeroSection from "./company/HeroSection";
-import JobCard from "./company/JobCard";
 import TalentSearch from "./company/TalentSearch";
-import { FiArrowRight } from "react-icons/fi";
+import { FiX, FiFileText } from "react-icons/fi";
 
 export default function CompanyLanding() {
-  const navigate = useNavigate();
   const searchSectionRef = useRef<HTMLDivElement>(null);
 
   const [users, setUsers] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [notices, setNotices] = useState<any[]>([]);
+  const [selectedNotice, setSelectedNotice] = useState<any>(null);
 
-  // Load Real Users
+  // Load Real Users & Notices
   useEffect(() => {
+    // Users
     const usersStr = localStorage.getItem("db_users");
     if (usersStr) {
       try {
@@ -26,42 +26,18 @@ export default function CompanyLanding() {
         console.error("Failed to load users", e);
       }
     }
+
+    // Notices
+    const noticesStr = localStorage.getItem("db_notices");
+    if (noticesStr) {
+      setNotices(JSON.parse(noticesStr).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    }
   }, []);
 
   // 검색 버튼 클릭 시 실행될 함수
   const scrollToSearch = () => {
     searchSectionRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-  const dummyJobs = [
-    {
-      id: 1,
-      company: "(주)테크컴퍼니",
-      title: "프론트엔드 개발자 긴급 채용",
-      location: "서울 강남구",
-      pay: "연봉 4,500+",
-    },
-    {
-      id: 2,
-      company: "카페그라운드",
-      title: "주말 오전 파트타임 구인",
-      location: "경기 수원시",
-      pay: "시급 10,000원",
-    },
-    {
-      id: 3,
-      company: "디자인스튜디오",
-      title: "웹 퍼블리셔 계약직 모집",
-      location: "서울 마포구",
-      pay: "월 300+",
-    },
-    {
-      id: 4,
-      company: "물류센터",
-      title: "단기 물류 보조 알바생",
-      location: "인천 서구",
-      pay: "일급 12만원",
-    },
-  ];
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center">
@@ -94,17 +70,82 @@ export default function CompanyLanding() {
               />
             </div>
 
-            <div className="flex justify-between items-end mb-8 mt-12">
-              <h2 className="text-2xl font-bold text-gray-800">추천 공고</h2>
-              <span className="text-blue-600 cursor-pointer font-medium hover:underline">
-                전체보기 &gt;
-              </span>
-            </div>
+            {/* 공지사항 섹션 */}
+            <div className="mt-16 bg-white rounded-3xl p-8 border border-gray-100 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-purple-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50"></div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {dummyJobs.map((job) => (
-                <JobCard key={`${job.id}-${job.title}`} {...job} />
-              ))}
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2 relative z-10">
+                <FiFileText className="text-purple-600" /> 공지사항
+              </h2>
+
+              <div className="overflow-hidden bg-white border border-gray-100 rounded-xl relative z-10">
+                <table className="w-full text-left">
+                  <thead className="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                      <th className="px-6 py-4 text-sm font-bold text-gray-500 w-20 text-center">No.</th>
+                      <th className="px-6 py-4 text-sm font-bold text-gray-500">제목</th>
+                      <th className="px-6 py-4 text-sm font-bold text-gray-500 w-32 text-center">날짜</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {notices.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="px-6 py-8 text-center text-gray-400 text-sm">
+                          등록된 공지사항이 없습니다.
+                        </td>
+                      </tr>
+                    ) : (
+                      notices.map((notice, index) => (
+                        <tr
+                          key={notice.id}
+                          onClick={() => setSelectedNotice(notice)}
+                          className="hover:bg-purple-50/50 cursor-pointer transition-colors"
+                        >
+                          <td className="px-6 py-4 text-center text-gray-400 text-sm font-mono">
+                            {notices.length - index}
+                          </td>
+                          <td className="px-6 py-4 font-medium text-gray-800">
+                            {notice.title}
+                          </td>
+                          <td className="px-6 py-4 text-center text-gray-500 text-sm">
+                            {new Date(notice.createdAt).toLocaleDateString()}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* 공지사항 모달 */}
+              {selectedNotice && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedNotice(null)}>
+                  <div className="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-fade-in-up" onClick={e => e.stopPropagation()}>
+                    <div className="px-8 py-6 border-b border-gray-100 flex justify-between items-start bg-gray-50">
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">{selectedNotice.title}</h3>
+                        <span className="text-sm text-gray-500">
+                          {new Date(selectedNotice.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <button onClick={() => setSelectedNotice(null)} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
+                        <FiX className="text-xl text-gray-500" />
+                      </button>
+                    </div>
+                    <div className="p-8 max-h-[60vh] overflow-y-auto leading-relaxed text-gray-700 whitespace-pre-wrap">
+                      {selectedNotice.content}
+                    </div>
+                    <div className="px-8 py-5 border-t border-gray-100 flex justify-end">
+                      <button
+                        onClick={() => setSelectedNotice(null)}
+                        className="px-6 py-2 bg-gray-900 text-white rounded-lg font-bold hover:bg-gray-800 transition-colors"
+                      >
+                        닫기
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </main>
 

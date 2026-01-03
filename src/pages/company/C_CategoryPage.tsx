@@ -8,7 +8,6 @@ import SubsidyBoard from "./SubsidyBoard";
 import InsuranceGuideBoard from "./InsuranceGuideBoard";
 import TalentSearchBoard from "./TalentSearchBoard";
 import {
-  FiArrowRight,
   FiPlus,
   FiSearch,
   FiFileText,

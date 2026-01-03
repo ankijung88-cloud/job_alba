@@ -230,6 +230,15 @@ const CompanyNavigation = () => {
             >
               공고등록
             </button>
+            <button
+              onClick={() => {
+                localStorage.removeItem("role");
+                navigate("/");
+              }}
+              className="px-4 py-2 rounded-lg text-sm font-bold text-red-500 hover:bg-red-50 border border-red-200 transition bg-white shadow-sm"
+            >
+              로그아웃
+            </button>
           </div>
         </div>
       </div>
