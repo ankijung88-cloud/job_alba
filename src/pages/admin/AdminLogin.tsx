@@ -64,6 +64,20 @@ function AdminLogin() {
         }
     };
 
+    const handleReset = () => {
+        if (window.confirm("관리자 정보를 초기화하시겠습니까? (admin / admin1234)")) {
+            const defaultAdmin = {
+                id: "admin",
+                password: "admin1234",
+                name: "최고관리자",
+                email: "admin@jobalba.com",
+                role: "ADMIN"
+            };
+            localStorage.setItem("db_admin", JSON.stringify(defaultAdmin));
+            alert("초기화되었습니다. admin / admin1234 로 로그인하세요.");
+        }
+    };
+
     return (
         <div className="min-h-screen w-full flex items-center justify-center bg-gray-900 p-4 relative overflow-hidden">
             {/* Background Effects */}
@@ -119,9 +133,12 @@ function AdminLogin() {
                     </button>
                 </form>
 
-                <div className="mt-8 text-center">
-                    <button onClick={() => navigate("/")} className="text-gray-400 text-sm hover:text-white transition-colors">
+                <div className="mt-8 text-center space-y-2">
+                    <button onClick={() => navigate("/")} className="text-gray-400 text-sm hover:text-white transition-colors block w-full">
                         ← 메인으로 돌아가기
+                    </button>
+                    <button onClick={handleReset} className="text-red-400 text-xs hover:text-red-300 transition-colors opacity-50 hover:opacity-100">
+                        * 관리자 정보 초기화 (Reset)
                     </button>
                 </div>
             </div>

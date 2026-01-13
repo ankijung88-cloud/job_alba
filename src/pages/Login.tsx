@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiUser, FiBriefcase, FiLock, FiArrowRight, FiUserPlus, FiHelpCircle, FiArrowLeft } from "react-icons/fi";
 
@@ -11,6 +11,49 @@ function Login() {
     id: "",
     password: "",
   });
+
+  // Init Mock Data (Self-Healing)
+  useEffect(() => {
+    // 1. Ensure Default User
+    const usersStr = localStorage.getItem("db_users");
+    if (!usersStr) {
+      const defaultUser = {
+        "user": {
+          id: "user",
+          password: "user1234",
+          name: "홍길동",
+          phone: "010-1234-5678",
+          email: "hong@test.com",
+          role: "USER",
+          memberNumber: "M240101-0001",
+          nationality: "DOMESTIC",
+          education: { level: "대졸", schoolName: "서울대학교", graduated: true },
+          experiences: [],
+          hasExperience: false,
+          selfIntro: "성실한 인재입니다."
+        }
+      };
+      localStorage.setItem("db_users", JSON.stringify(defaultUser));
+    }
+
+    // 2. Ensure Default Company
+    const companiesStr = localStorage.getItem("db_companies");
+    if (!companiesStr) {
+      const defaultCompany = {
+        "company": {
+          id: "company",
+          password: "company1234",
+          companyName: "(주)테스트기업",
+          regNumber: "123-45-67890",
+          contactPerson: "김담당",
+          description: "혁신적인 IT 기업입니다.",
+          role: "COMPANY",
+          memberNumber: "C240101-0001"
+        }
+      };
+      localStorage.setItem("db_companies", JSON.stringify(defaultCompany));
+    }
+  }, []);
 
   // 찾기 폼 상태
   const [findForm, setFindForm] = useState({
@@ -125,6 +168,42 @@ function Login() {
       } else {
         alert("정보가 일치하지 않습니다.");
       }
+    }
+  };
+
+  const handleResetData = () => {
+    if (window.confirm("회원/기업 데이터를 초기화하시겠습니까?\n(기존 데이터가 삭제되고 테스트 계정이 생성됩니다.)")) {
+      const defaultUser = {
+        "user": {
+          id: "user",
+          password: "user1234",
+          name: "홍길동",
+          phone: "010-1234-5678",
+          email: "hong@test.com",
+          role: "USER",
+          memberNumber: "M240101-0001",
+          nationality: "DOMESTIC",
+          education: { level: "대졸", schoolName: "서울대학교", graduated: true },
+          experiences: [],
+          hasExperience: false,
+          selfIntro: "성실한 인재입니다."
+        }
+      };
+      const defaultCompany = {
+        "company": {
+          id: "company",
+          password: "company1234",
+          companyName: "(주)테스트기업",
+          regNumber: "123-45-67890",
+          contactPerson: "김담당",
+          description: "혁신적인 IT 기업입니다.",
+          role: "COMPANY",
+          memberNumber: "C240101-0001"
+        }
+      };
+      localStorage.setItem("db_users", JSON.stringify(defaultUser));
+      localStorage.setItem("db_companies", JSON.stringify(defaultCompany));
+      alert("데이터가 초기화되었습니다.\n[개인] user / user1234\n[기업] company / company1234");
     }
   };
 
@@ -246,6 +325,12 @@ function Login() {
                   className="w-full py-3 border-2 border-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
                 >
                   <FiUserPlus /> 무료 회원가입하기
+                </button>
+                <button
+                  onClick={handleResetData}
+                  className="w-full mt-2 py-2 text-xs text-red-300 hover:text-red-500 transition-colors"
+                >
+                  * 데이터 초기화 (Reset Data)
                 </button>
               </div>
             </>

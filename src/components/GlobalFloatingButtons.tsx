@@ -35,10 +35,16 @@ export default function GlobalFloatingButtons() {
         }
 
         // 2. Initialize Google Translate
+        // 3. Initialize Google Translate
         const initGoogleTranslate = () => {
             if (window.google?.translate?.TranslateElement) {
                 new window.google.translate.TranslateElement(
-                    { pageLanguage: 'ko', includedLanguages: 'ko,en,zh-CN,vi,th,id,mn,uz,tl,ne,my,km,si,bn', autoDisplay: false },
+                    {
+                        pageLanguage: 'ko',
+                        includedLanguages: 'ko,en,zh-CN,vi,th,id,mn,uz,tl,ne,my,km,si,bn',
+                        layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+                        autoDisplay: false
+                    },
                     'google_translate_element'
                 );
             }
@@ -53,6 +59,62 @@ export default function GlobalFloatingButtons() {
         } else {
             initGoogleTranslate();
         }
+
+        // 4. Force Hide/Remove Banner via MutationObserver AND Interval (Nuclear Option)
+        const hideBanner = () => {
+            // Target common banner selectors
+            const selectors = [
+                '.goog-te-banner-frame',
+                'iframe[id*=":1.container"]',
+                'iframe[src*="google"][class*="frame"]',
+                '.VIpgJd-ZVi9od-ORHb-OEVmcd' // Header strip
+            ];
+
+            selectors.forEach(selector => {
+                const elements = document.querySelectorAll(selector);
+                elements.forEach(el => {
+                    // Remove element entirely to stop it from fighting back
+                    el.remove();
+                });
+            });
+
+            const body = document.body;
+            const html = document.documentElement;
+
+            try {
+                // Force Style Reset
+                if (body.style.top && body.style.top !== '0px') {
+                    body.style.top = '0px';
+                }
+                if (body.style.marginTop && body.style.marginTop !== '0px') {
+                    body.style.marginTop = '0px';
+                }
+                if (body.style.position && body.style.position !== 'static') {
+                    body.style.position = 'static';
+                }
+
+                if (html.style.top && html.style.top !== '0px') {
+                    html.style.top = '0px';
+                }
+                if (html.style.marginTop && html.style.marginTop !== '0px') {
+                    html.style.marginTop = '0px';
+                }
+            } catch (e) {
+                // Ignore errors during style reset
+            }
+        };
+
+        const observer = new MutationObserver(hideBanner);
+        observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
+
+        // Backup timer just in case observer misses it
+        const timer = setInterval(hideBanner, 100);
+
+        return () => {
+            observer.disconnect();
+            clearInterval(timer);
+        };
     }, []);
 
     const changeLanguage = (langCode: string) => {
@@ -248,32 +310,8 @@ export default function GlobalFloatingButtons() {
             )}
 
             {/* Custom Styles */}
-            <style>{`
-                /* We allow the Google Banner to appear and shift the page content down 
-                   to prevent it from covering the top navigation/content. */
-                
-                /* Hide standard Google widget elements (the inline dropdown) if they appear, 
-                   since we have our own custom buttons */
-                .goog-te-gadget-simple { background-color: transparent !important; border: none !important; padding: 0 !important; font-size: 14px !important; }
-                .goog-te-gadget-icon { display: none !important; }
-                
-                /* Animations */
-                @keyframes scale-up {
-                    0% { transform: scale(0.95); opacity: 0; }
-                    100% { transform: scale(1); opacity: 1; }
-                }
-                .animate-scale-up {
-                    animation: scale-up 0.2s ease-out forwards;
-                }
-                
-                @keyframes fade-in {
-                    0% { opacity: 0; }
-                    100% { opacity: 1; }
-                }
-                .animate-fade-in {
-                    animation: fade-in 0.2s ease-out forwards;
-                }
-            `}</style>
+            {/* Custom Styles */}
+            {/* Custom Styles moved to index.css for global priority */}
         </>
     );
 }

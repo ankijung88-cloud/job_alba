@@ -7,6 +7,7 @@ import MinimumWageCalculator from "./MinimumWageCalculator";
 import SubsidyBoard from "./SubsidyBoard";
 import InsuranceGuideBoard from "./InsuranceGuideBoard";
 import TalentSearchBoard from "./TalentSearchBoard";
+import PaidServiceBoard from "./PaidServiceBoard";
 import {
   FiPlus,
   FiSearch,
@@ -15,6 +16,7 @@ import {
   FiSettings,
   FiMoreVertical,
   FiEye,
+  FiStar,
 } from "react-icons/fi";
 
 // ⚠️ 절대 여기서 CategoryPage나 C_CategoryPage를 자기 자신으로 import 하지 마세요!
@@ -105,6 +107,15 @@ const C_CategoryPage = () => {
           accentColor: "bg-gray-800",
           desc: "기업 운영에 필요한 각종 서비스를 제공합니다.",
         };
+      case "유료서비스":
+        return {
+          icon: <FiStar />,
+          color: "yellow",
+          bgColor: "bg-yellow-50",
+          textColor: "text-yellow-600",
+          accentColor: "bg-yellow-600",
+          desc: "채용 효과를 극대화하는 프리미엄 서비스입니다.",
+        };
       default:
         return {
           icon: <FiSettings />,
@@ -134,6 +145,10 @@ const C_CategoryPage = () => {
 
     if (decodedMenu === "기업지원" && decodedSub === "정부지원금 안내") {
       return <SubsidyBoard />;
+    }
+
+    if (decodedMenu === "유료서비스") {
+      return <PaidServiceBoard subName={decodedSub} />;
     }
 
     if (isLoading) {

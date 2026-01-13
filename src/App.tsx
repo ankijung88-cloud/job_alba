@@ -17,6 +17,7 @@ import AdminProfileEdit from "./pages/admin/AdminProfileEdit";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminNoticeManage from "./pages/admin/AdminNoticeManage";
 import MainLayout from "./layouts/MainLayout";
+import ForeignSupportBoard from "./pages/company/ForeignSupportBoard";
 
 export default function App() {
   return (
@@ -67,6 +68,10 @@ export default function App() {
           <Route
             path="/company/category/:menuName/:subName"
             element={<C_CategoryPage />}
+          />
+          <Route
+            path="/company/foreign/:id"
+            element={<ForeignSupportBoard />}
           />
           {/* 1. 개인 구직자용 카테고리 페이지 */}
           <Route path="/category/:menuName/:subName" element={<CategoryPage />} />
